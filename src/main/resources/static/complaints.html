@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incident Management - CIVICPULSE AI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-light">
+  
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand d-flex align-items-center" href="index.html">
+        <i class="bi bi-shield-shaded fs-3 text-info me-2"></i>
+        <span>CIVICPULSE</span>
+        <span class="brand-badge">AI</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link " href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link " href="submit-complaint.html"><i class="bi bi-plus-circle me-1 text-info"></i>Report Issue</a></li>
+          <li class="nav-item"><a class="nav-link " href="track-complaint.html">Track Complaint</a></li>
+          <li class="nav-item"><a class="nav-link " href="hotspots.html"><i class="bi bi-geo-alt-fill me-1 text-warning"></i>Hotspots Map</a></li>
+          <li class="nav-item"><a class="nav-link " href="admin-dashboard.html"><i class="bi bi-speedometer2 me-1"></i>Command Center</a></li>
+          <li class="nav-item"><a class="nav-link active" href="complaints.html">All Incidents</a></li>
+        </ul>
+        <ul class="navbar-nav ms-auto align-items-center" id="auth-nav">
+          <li class="nav-item"><a class="nav-link" href="login.html">Citizen Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="admin-login.html"><i class="bi bi-shield-lock me-1"></i>Admin Portal</a></li>
+          <li class="nav-item ms-lg-2"><a class="btn btn-sm btn-outline-light px-3" href="register.html">Register</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+  <div class="container-fluid px-lg-4 py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="fw-bold mb-1"><i class="bi bi-folder2-open text-primary me-2"></i>Municipal Incident Management</h3>
+        <p class="text-muted mb-0">Review, assign, update priority, and transition complaints to resolution.</p>
+      </div>
+      <div>
+        <span class="badge bg-primary fs-6 py-2 px-3" id="complaints-count-display">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="custom-card p-3 mb-4">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-3">
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+            <input type="text" id="search-input" class="form-control" placeholder="Search by title, ID, address...">
+          </div>
+        </div>
+
+        <div class="col-md-2">
+          <select id="filter-category" class="form-select">
+            <option value="">All Categories</option>
+            <option value="ROAD_DAMAGE">Road Damage</option>
+            <option value="WATERLOGGING">Waterlogging</option>
+            <option value="GARBAGE_OVERFLOW">Garbage Overflow</option>
+            <option value="DRAINAGE_PROBLEMS">Drainage Problems</option>
+            <option value="STREETLIGHT_PROBLEMS">Streetlight Problems</option>
+            <option value="WATER_SUPPLY">Water Supply</option>
+            <option value="OTHER">Other Issues</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <select id="filter-priority" class="form-select">
+            <option value="">All Priorities</option>
+            <option value="CRITICAL">CRITICAL (4h SLA)</option>
+            <option value="HIGH">HIGH (24h SLA)</option>
+            <option value="MEDIUM">MEDIUM (72h SLA)</option>
+            <option value="LOW">LOW (7d SLA)</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <select id="filter-status" class="form-select">
+            <option value="">All Statuses</option>
+            <option value="SUBMITTED">Submitted</option>
+            <option value="UNDER_REVIEW">Under Review</option>
+            <option value="ASSIGNED">Assigned</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="RESOLVED">Resolved</option>
+          </select>
+        </div>
+
+        <div class="col-md-3 text-md-end">
+          <button type="button" id="reset-filters" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="custom-card p-4">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Tracking ID</th>
+              <th>Incident Title &amp; Location</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Assigned Department</th>
+              <th>Created On</th>
+              <th>Manage</th>
+            </tr>
+          </thead>
+          <tbody id="complaints-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Complaint Detail & Triage Modal -->
+  <div class="modal fade" id="complaintDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="bi bi-sliders me-2 text-info"></i>Manage Incident <span id="modal-tracking-id" class="text-info"></span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <!-- Duplicate Alert if applicable -->
+          <div id="modal-duplicate-box" class="alert alert-warning py-2 small d-none"></div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-8">
+              <h5 class="fw-bold text-dark mb-1" id="modal-title">Title</h5>
+              <div class="text-muted small mb-2"><i class="bi bi-geo-alt me-1"></i><span id="modal-address"></span></div>
+              <div class="p-3 bg-light rounded border small" id="modal-desc"></div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-light rounded border">
+                <div class="mb-2">
+                  <span class="text-muted small d-block">Current Category:</span>
+                  <div id="modal-category"></div>
+                </div>
+                <div class="mb-2">
+                  <span class="text-muted small d-block">Current Priority:</span>
+                  <div id="modal-priority"></div>
+                </div>
+                <div>
+                  <span class="text-muted small d-block">Current Status:</span>
+                  <div id="modal-status"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Intelligence Section -->
+          <div class="card bg-info-subtle border-info mb-4">
+            <div class="card-body p-3">
+              <div class="d-flex align-items-center mb-1">
+                <i class="bi bi-stars text-primary me-2"></i>
+                <span class="fw-bold text-primary small text-uppercase">Explainable AI Risk Engine Assessment</span>
+              </div>
+              <div class="small fw-semibold text-dark mb-1">Summary: <span id="modal-ai-summary" class="fw-normal"></span></div>
+              <div class="small text-muted"><strong>Rationale:</strong> <span id="modal-ai-explanation"></span></div>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <!-- Action 1: Department Assignment -->
+            <div class="col-md-6 border-end">
+              <h6 class="fw-bold mb-2"><i class="bi bi-building me-1 text-primary"></i>Assign Department</h6>
+              <div class="mb-2">
+                <select id="modal-assign-dept" class="form-select form-select-sm"></select>
+              </div>
+              <div class="mb-2">
+                <input type="text" id="modal-assign-notes" class="form-control form-control-sm" placeholder="Work order dispatch notes...">
+              </div>
+              <button type="button" id="modal-btn-assign-dept" class="btn btn-sm btn-primary">
+                <i class="bi bi-check2-circle me-1"></i>Dispatch Assignment
+              </button>
+            </div>
+
+            <!-- Action 2: Status Transition -->
+            <div class="col-md-6">
+              <h6 class="fw-bold mb-2"><i class="bi bi-arrow-repeat me-1 text-success"></i>Update Lifecycle Status</h6>
+              <div class="mb-2">
+                <select id="modal-update-status" class="form-select form-select-sm">
+                  <option value="SUBMITTED">Submitted</option>
+                  <option value="UNDER_REVIEW">Under Review</option>
+                  <option value="ASSIGNED">Assigned</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="RESOLVED">Resolved</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <input type="text" id="modal-status-remarks" class="form-control form-control-sm" placeholder="Official remarks / remediation note...">
+              </div>
+              <button type="button" id="modal-btn-save-status" class="btn btn-sm btn-success">
+                <i class="bi bi-floppy me-1"></i>Transition Status
+              </button>
+            </div>
+          </div>
+
+          <!-- Priority Override (Admin justification) -->
+          <hr class="my-3">
+          <div class="row align-items-center">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold mb-0">Override Priority (Admin Justification):</label>
+            </div>
+            <div class="col-md-3">
+              <select id="modal-update-priority" class="form-select form-select-sm">
+                <option value="CRITICAL">CRITICAL</option>
+                <option value="HIGH">HIGH</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="LOW">LOW</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <input type="text" id="modal-prio-reason" class="form-control form-control-sm" placeholder="Reason for override">
+            </div>
+            <div class="col-md-2 text-end">
+              <button type="button" id="modal-btn-override-prio" class="btn btn-sm btn-outline-danger">Override</button>
+            </div>
+          </div>
+
+          <div class="mt-3 text-muted small border-top pt-2">
+            <strong>Citizen Reporter:</strong> <span id="modal-citizen"></span> &bull; 
+            <strong>Created:</strong> <span id="modal-created"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <footer>
+    <div class="container text-center">
+      <div class="d-flex align-items-center justify-content-center mb-2">
+        <i class="bi bi-shield-shaded fs-4 text-info me-2"></i>
+        <span class="fw-bold text-white fs-5">CIVICPULSE AI</span>
+      </div>
+      <p class="text-secondary small mb-2">From Citizen Complaints to Intelligent Civic Action &bull; PromptWars x ASTRA Hackathon Solution</p>
+      <p class="text-muted small mb-0">&copy; 2026 CivicPulse Municipal Corporation. Powered by Google Antigravity &amp; Gemini AI.</p>
+    </div>
+  </footer>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/complaints-management.js"></script>
+</body>
+</html>

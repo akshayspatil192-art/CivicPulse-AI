@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report Civic Issue - CIVICPULSE AI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand d-flex align-items-center" href="index.html">
+        <i class="bi bi-shield-shaded fs-3 text-info me-2"></i>
+        <span>CIVICPULSE</span>
+        <span class="brand-badge">AI</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link " href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="submit-complaint.html"><i class="bi bi-plus-circle me-1 text-info"></i>Report Issue</a></li>
+          <li class="nav-item"><a class="nav-link " href="track-complaint.html">Track Complaint</a></li>
+          <li class="nav-item"><a class="nav-link " href="hotspots.html"><i class="bi bi-geo-alt-fill me-1 text-warning"></i>Hotspots Map</a></li>
+          <li class="nav-item"><a class="nav-link " href="admin-dashboard.html"><i class="bi bi-speedometer2 me-1"></i>Command Center</a></li>
+          <li class="nav-item"><a class="nav-link " href="complaints.html">All Incidents</a></li>
+        </ul>
+        <ul class="navbar-nav ms-auto align-items-center" id="auth-nav">
+          <li class="nav-item"><a class="nav-link" href="login.html">Citizen Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="admin-login.html"><i class="bi bi-shield-lock me-1"></i>Admin Portal</a></li>
+          <li class="nav-item ms-lg-2"><a class="btn btn-sm btn-outline-light px-3" href="register.html">Register</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+  <div class="container py-4">
+    <div class="row align-items-center mb-4">
+      <div class="col-md-8">
+        <h2 class="fw-bold mb-1"><i class="bi bi-megaphone text-primary me-2"></i>Report a Civic Issue</h2>
+        <p class="text-muted mb-0">Submit in under 60 seconds. Our real-time AI engine categorizes, summarizes, and checks duplicates automatically.</p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <span class="ai-badge"><i class="bi bi-lightning-charge-fill"></i> Real-time AI Copilot Active</span>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Submission Form (Stage 1: Capture) -->
+      <div class="col-lg-7">
+        <div class="custom-card p-4">
+          <form id="complaint-form">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Complaint Title <span class="text-danger">*</span></label>
+              <input type="text" id="title" class="form-control" placeholder="e.g. Severe water accumulation on MG Road" required>
+              <div class="form-text">Be specific about the core problem.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Detailed Description <span class="text-danger">*</span></label>
+              <textarea id="description" rows="4" class="form-control" placeholder="Describe the severity, affected area, and immediate danger (e.g., Heavy rainwater accumulated near metro pillar 42, traffic blocked, ambulances cannot pass)..." required></textarea>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Category</label>
+                <select id="category" class="form-select">
+                  <option value="AUTO" selected>Auto-detect using AI (Recommended)</option>
+                  <option value="ROAD_DAMAGE">Road Damage (Potholes, Asphalt)</option>
+                  <option value="WATERLOGGING">Waterlogging & Flooding</option>
+                  <option value="GARBAGE_OVERFLOW">Garbage Overflow & Waste</option>
+                  <option value="DRAINAGE_PROBLEMS">Drainage & Sewer Blockage</option>
+                  <option value="STREETLIGHT_PROBLEMS">Streetlight & Electrical</option>
+                  <option value="WATER_SUPPLY">Drinking Water Supply</option>
+                  <option value="OTHER">Other Civic Issues</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Photo Evidence (Optional)</label>
+                <input type="file" id="complaint-image" class="form-control" accept="image/*">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-semibold mb-0">Location & Landmark <span class="text-danger">*</span></label>
+                <button type="button" id="use-my-location" class="btn btn-sm btn-outline-primary py-0 px-2">
+                  <i class="bi bi-crosshair me-1"></i>Use GPS Location
+                </button>
+              </div>
+              <input type="text" id="address" class="form-control mb-2" placeholder="e.g. Opposite MG Road Metro Station, Pillar 42" required>
+              
+              <!-- Leaflet Map Pin Picker -->
+              <div class="position-relative">
+                <div id="picker-map" style="height: 260px;"></div>
+                <div class="position-absolute bottom-0 start-0 m-2 bg-dark text-white px-2 py-1 rounded small opacity-75" style="z-index: 1000;" id="coords-display">
+                  Lat: 12.9716, Lng: 77.5946
+                </div>
+              </div>
+              <input type="hidden" id="latitude" value="12.9716">
+              <input type="hidden" id="longitude" value="77.5946">
+              <div class="form-text">Click or drag the pin to set the exact incident coordinates.</div>
+            </div>
+
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-civic-teal py-3 fs-6 fw-bold shadow">
+                <i class="bi bi-send-check me-2"></i>Submit Civic Complaint
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Real-time AI Copilot Panel (Stage 2: Understand) -->
+      <div class="col-lg-5">
+        <div id="ai-copilot-card" class="custom-card p-4 border-top border-4 border-info">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-stars text-primary me-2"></i>AI Copilot Live Triage</h5>
+            <div id="ai-status-indicator" class="small text-muted">Awaiting input...</div>
+          </div>
+
+          <!-- Duplicate Alert Warning -->
+          <div id="duplicate-alert-banner" class="alert alert-warning d-none py-2 px-3 small border-warning">
+            <div class="d-flex align-items-start">
+              <i class="bi bi-exclamation-triangle-fill fs-5 text-warning me-2 mt-1"></i>
+              <div>
+                <strong>Possible Duplicate Found:</strong> <span id="dup-tracking-id"></span>
+                <div id="dup-reason" class="text-muted mt-1 small">A similar complaint was reported within 200m. Your report will be linked to consolidate municipal action.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-semibold text-uppercase">Detected Category</label>
+            <div id="ai-detected-cat" class="mt-1">
+              <span class="badge bg-secondary">Awaiting text...</span>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-semibold text-uppercase">AI Executive Summary</label>
+            <div id="ai-summary-text" class="p-2 rounded bg-light border small text-dark mt-1 fst-italic">
+              Type at least 5 characters in Title and Description to trigger real-time AI analysis.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-semibold text-uppercase">Action Brief (For Municipal Triage)</label>
+            <div id="ai-action-brief" class="p-2 rounded bg-light border small text-primary fw-semibold mt-1">
+              Field action command will be generated automatically.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <label class="text-muted small fw-semibold text-uppercase mb-0">Priority Score</label>
+              <div id="ai-priority-badge"></div>
+            </div>
+            <div class="fs-4 fw-bold text-dark mt-1" id="ai-priority-score">-- / 100</div>
+          </div>
+
+          <!-- Factor Breakdown Progress Bars -->
+          <div class="mb-2">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>Safety Hazard Risk</span>
+              <span id="label-safety">Factor</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div id="bar-safety" class="progress-bar bg-success" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>Operational Urgency</span>
+              <span id="label-urgency">Factor</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div id="bar-urgency" class="progress-bar bg-warning" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>Public Density Impact</span>
+              <span id="label-impact">Factor</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div id="bar-impact" class="progress-bar bg-info" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="mb-1">
+            <label class="text-muted small fw-semibold text-uppercase">Explainable Priority Rationale</label>
+            <div id="ai-explanation-text" class="small text-muted p-2 bg-light border rounded mt-1">
+              Explainable factors will be displayed here once analyzed.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <footer>
+    <div class="container text-center">
+      <div class="d-flex align-items-center justify-content-center mb-2">
+        <i class="bi bi-shield-shaded fs-4 text-info me-2"></i>
+        <span class="fw-bold text-white fs-5">CIVICPULSE AI</span>
+      </div>
+      <p class="text-secondary small mb-2">From Citizen Complaints to Intelligent Civic Action &bull; PromptWars x ASTRA Hackathon Solution</p>
+      <p class="text-muted small mb-0">&copy; 2026 CivicPulse Municipal Corporation. Powered by Google Antigravity &amp; Gemini AI.</p>
+    </div>
+  </footer>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/submit-complaint.js"></script>
+</body>
+</html>
